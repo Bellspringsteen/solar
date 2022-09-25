@@ -16,8 +16,9 @@
 #include "sdkconfig.h"
 #include "wifi.h"
 #include "esp_sleep.h"
+#include <stdint.h>
 
-#define uS_TO_S_FACTOR 1000000 /* Conversion factor for micro seconds to seconds */ 
+#define uS_TO_S_FACTOR 1000000LL  /* Conversion factor for micro seconds to seconds */
 
 #define TASK_PRI   4
 #define TASK_STACK 8192 // 2048
@@ -89,7 +90,7 @@ void app_main(void)
     //xTaskCreate(wifi_init_sta_task, "Wifi Task", TASK_STACK, NULL, TASK_PRI, NULL);
 
     configure_led();
-    int seconds = 0;
+    //int seconds = 0;
 
     while (1) {
         //ESP_LOGI(TAG, "Turning the LED %s!", s_led_state == true ? "ON" : "OFF");
@@ -99,27 +100,34 @@ void app_main(void)
         //post_server_call(44);
         //vTaskDelay(1000 / portTICK_PERIOD_MS);
         
-        esp_sleep_enable_timer_wakeup(1 * uS_TO_S_FACTOR);
-        esp_light_sleep_start();
+
+        xTaskCreate(wifi_init_sta_task, "Wifi Task", TASK_STACK, NULL, TASK_PRI, NULL);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        post_server_call(44);
+
+        static uint64_t time_to_sleep_seconds = 60*60;
+        esp_sleep_enable_timer_wakeup(time_to_sleep_seconds * uS_TO_S_FACTOR);
+        //esp_light_sleep_start();
         //vTaskDelay(1000 / portTICK_PERIOD_MS);
 
-        //        esp_deep_sleep_start(); swap to deep sleep, sleep for 10 mins and then start from scratch
-        seconds++;
+        esp_deep_sleep_start(); //swap to deep sleep, sleep for 10 mins and then start from scratch
+        
+        //seconds++;
 
-        if ((seconds > 1*60) && (wifi_task_created == false)){
-            xTaskCreate(wifi_init_sta_task, "Wifi Task", TASK_STACK, NULL, TASK_PRI, NULL);
-            wifi_task_created = true; 
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-            disable_wifi();   
-        }
-        else if ((seconds > 2*60) && ((seconds%(60*2))==0))
-        {
-         enable_wifi();
-         vTaskDelay(1000 / portTICK_PERIOD_MS);
-         post_server_call(44);
-         vTaskDelay(1000 / portTICK_PERIOD_MS);
-         disable_wifi();   
-        }
+        //if ((seconds > 1*60) && (wifi_task_created == false)){
+        //    xTaskCreate(wifi_init_sta_task, "Wifi Task", TASK_STACK, NULL, TASK_PRI, NULL);
+        //    wifi_task_created = true; 
+        //    vTaskDelay(1000 / portTICK_PERIOD_MS);
+        //    disable_wifi();   
+        //}
+        //else if ((seconds > 2*60) && ((seconds%(60*2))==0))
+        //{
+        // enable_wifi();
+        // vTaskDelay(1000 / portTICK_PERIOD_MS);
+        // post_server_call(44);
+        // vTaskDelay(1000 / portTICK_PERIOD_MS);
+        // disable_wifi();   
+        //}
 
     }
 }

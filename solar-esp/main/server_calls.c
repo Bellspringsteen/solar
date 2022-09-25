@@ -84,7 +84,7 @@ void post_server_call(int solar){
   esp_http_client_config_t config = {
     .url = "http://192.168.1.243:8081/solar?key=43",
     .event_handler = _http_event_handle,
-    .is_async = true,
+//    .is_async = true,
     .timeout_ms = 5000,
   };
   esp_err_t err;
@@ -103,7 +103,7 @@ void post_server_call(int solar){
                 esp_http_client_get_content_length(client));
         return;
     } else {
-        ESP_LOGE(TAG, "Error perform http request %s", esp_err_to_name(err));
+        ESP_LOGI(TAG, "Error perform http request %s", esp_err_to_name(err));
     }
     esp_http_client_cleanup(client);
   }
